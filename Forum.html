@@ -1,0 +1,50 @@
+<!--  UPS-Forum | chayns + Supabase -->
+<h2 style="font-size: 1.5em; margin-bottom: 10px;"> Forum UPS-Freiburg</h2>
+
+<!-- Formular -->
+<div style="margin-bottom: 20px;">
+  <input id="name" type="text" placeholder="Dein Name (optional)" style="width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #ccc;">
+  <textarea id="message" placeholder="Was möchtest du mitteilen?" style="width: 100%; padding: 10px; height: 100px; border-radius: 8px; border: 1px solid #ccc;"></textarea>
+  <button onclick="submitPost()" style="margin-top: 10px; padding: 10px 20px; border: none; border-radius: 6px; background-color: #3c7bd4; color: white; cursor: pointer;">Beitrag senden</button>
+</div>
+
+<!-- Beiträge anzeigen -->
+<div id="posts"></div>
+
+<!-- Supabase Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+  const SUPABASE_URL = 'https://fkiwgjznrhznrrpsddt.supabase.co'; // ← deine Supabase-URL
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZraXdnanpucmh6bnlycnBzZGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzOTY3NzksImV4cCI6MjA2NDk3Mjc3OX0.zJnWziO4UHkWfG1DPxMv7IKO8z4DeV-qjDhC9BY_v-c';
+
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function submitPost() {
+    const name = document.getElementById('name').value.trim();
+    const message = document.getElementById('message').value.trim();
+    if (!message) return alert('Bitte eine Nachricht eingeben.');
+
+    await supabase.from('posts').insert([{ name, message }]);
+    document.getElementById('message').value = '';
+    loadPosts();
+  }
+
+  async function loadPosts() {
+    const { data } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
+    const postsDiv = document.getElementById('posts');
+    postsDiv.innerHTML = '';
+    data.forEach(post => {
+      const name = post.name || 'Anonym';
+      const date = new Date(post.created_at).toLocaleString();
+      const html = `
+        <div style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; background: #f9f9f9;">
+          <div style="font-weight: bold; margin-bottom: 4px;">${name} <span style="font-weight: normal; color: #888; font-size: 0.85em;">(${date})</span></div>
+          <div>${post.message}</div>
+        </div>
+      `;
+      postsDiv.innerHTML += html;
+    });
+  }
+
+  loadPosts();
+</script>

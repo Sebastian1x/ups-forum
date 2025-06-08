@@ -19,16 +19,28 @@
 
   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  async function submitPost() {
-    const name = document.getElementById('name').value.trim();
-    const message = document.getElementById('message').value.trim();
-    if (!message) return alert('Bitte eine Nachricht eingeben.');
+ async function submitPost() {
+  const name = document.getElementById('name').value.trim();
+  const message = document.getElementById('message').value.trim();
 
-    await supabase.from('posts').insert([{ name, message }]);
+  if (!message) {
+    alert('Bitte eine Nachricht eingeben.');
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('posts')
+    .insert([{ name, message }]);
+
+  if (error) {
+    console.error(error);
+    alert('Fehler beim Speichern: ' + error.message);
+  } else {
+    console.log('Gespeichert:', data);
     document.getElementById('message').value = '';
     loadPosts();
   }
-
+}
   async function loadPosts() {
     const { data } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
     const postsDiv = document.getElementById('posts');
